@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Slider8Solver
 {
-	public partial class Form1 : Form
+    public partial class Form1 : Form
 	{
 
 		private SliderSolver solver;
@@ -24,12 +18,25 @@ namespace Slider8Solver
 
 		#region Buttons
 
-		private void button3_Click(object sender, EventArgs e)
+		private void buttonUseInput_Click(object sender, EventArgs e)
 		{
 			int size;
 			Int32.TryParse(comboBox1.Text, out size);
-			solver = new SliderSolver(textBox1.Text, size);
+			solver = new SliderSolver(textBoxPuzzleInput.Text, size);
+		    if (!solver.IsPuzzleValid)
+		        textBoxPuzzleInput.BackColor = Color.Red;
+		    else
+		        textBoxPuzzleInput.BackColor = Color.White;
+
+            solver.SolvePuzzle();
 		}
+
+        private void buttonReset_Click(object sender, EventArgs e)
+        {
+            var isSolvable = solver.IsPuzzleValid;
+
+            Console.WriteLine("Puzzle is solvable: " + isSolvable);
+        }
 
 		#endregion Buttons
 
