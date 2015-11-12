@@ -28,6 +28,7 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
+            this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.labelPos9 = new System.Windows.Forms.Label();
@@ -41,26 +42,27 @@
             this.labelPos1 = new System.Windows.Forms.Label();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
             this.button3 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
+            this.buttonRandomizePuzzle = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.textBoxPuzzleInput = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
-            this.tabPagePuzzle = new System.Windows.Forms.TabControl();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
-            this.button6 = new System.Windows.Forms.Button();
+            this.buttonSearchBreadthFirst = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.comboBox2 = new System.Windows.Forms.ComboBox();
-            this.button4 = new System.Windows.Forms.Button();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.button5 = new System.Windows.Forms.Button();
-            this.button7 = new System.Windows.Forms.Button();
+            this.textBoxPuzzleInput2 = new System.Windows.Forms.TextBox();
+            this.buttonSearchDepthFirst = new System.Windows.Forms.Button();
+            this.buttonSearchAStar = new System.Windows.Forms.Button();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.buttonRandomizePuzzle2 = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
-            this.tabPagePuzzle.SuspendLayout();
+            this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tableLayoutPanel4.SuspendLayout();
@@ -237,7 +239,7 @@
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel3.Controls.Add(this.button3, 0, 1);
-            this.tableLayoutPanel3.Controls.Add(this.button2, 1, 0);
+            this.tableLayoutPanel3.Controls.Add(this.buttonRandomizePuzzle, 1, 0);
             this.tableLayoutPanel3.Controls.Add(this.button1, 0, 0);
             this.tableLayoutPanel3.Controls.Add(this.textBoxPuzzleInput, 1, 1);
             this.tableLayoutPanel3.Controls.Add(this.label1, 0, 2);
@@ -263,15 +265,15 @@
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.buttonUseInput_Click);
             // 
-            // button2
+            // buttonRandomizePuzzle
             // 
-            this.button2.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.button2.Location = new System.Drawing.Point(234, 7);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
-            this.button2.TabIndex = 1;
-            this.button2.Text = "New Puzzle";
-            this.button2.UseVisualStyleBackColor = true;
+            this.buttonRandomizePuzzle.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.buttonRandomizePuzzle.Location = new System.Drawing.Point(234, 7);
+            this.buttonRandomizePuzzle.Name = "buttonRandomizePuzzle";
+            this.buttonRandomizePuzzle.Size = new System.Drawing.Size(75, 23);
+            this.buttonRandomizePuzzle.TabIndex = 1;
+            this.buttonRandomizePuzzle.Text = "Random Puzzle";
+            this.buttonRandomizePuzzle.UseVisualStyleBackColor = true;
             // 
             // button1
             // 
@@ -293,6 +295,8 @@
             this.textBoxPuzzleInput.Size = new System.Drawing.Size(150, 20);
             this.textBoxPuzzleInput.TabIndex = 3;
             this.textBoxPuzzleInput.Text = "7,8,3,4,1,5,6,,2";
+            this.toolTip1.SetToolTip(this.textBoxPuzzleInput, "Enter a puzzle line by line, each value separated by commas.");
+            this.textBoxPuzzleInput.TextChanged += new System.EventHandler(this.textBoxPuzzleInput_TextChanged);
             // 
             // label1
             // 
@@ -321,17 +325,18 @@
             this.comboBox1.Size = new System.Drawing.Size(121, 21);
             this.comboBox1.TabIndex = 6;
             this.comboBox1.Text = "3";
+            this.toolTip1.SetToolTip(this.comboBox1, "Select the size of the puzzle.");
             // 
-            // tabPagePuzzle
+            // tabControl1
             // 
-            this.tabPagePuzzle.Controls.Add(this.tabPage1);
-            this.tabPagePuzzle.Controls.Add(this.tabPage2);
-            this.tabPagePuzzle.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabPagePuzzle.Location = new System.Drawing.Point(0, 0);
-            this.tabPagePuzzle.Name = "tabPagePuzzle";
-            this.tabPagePuzzle.SelectedIndex = 0;
-            this.tabPagePuzzle.Size = new System.Drawing.Size(382, 434);
-            this.tabPagePuzzle.TabIndex = 1;
+            this.tabControl1.Controls.Add(this.tabPage1);
+            this.tabControl1.Controls.Add(this.tabPage2);
+            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl1.Location = new System.Drawing.Point(0, 0);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(382, 434);
+            this.tabControl1.TabIndex = 1;
             // 
             // tabPage1
             // 
@@ -360,13 +365,13 @@
             this.tableLayoutPanel4.ColumnCount = 2;
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel4.Controls.Add(this.button6, 0, 0);
+            this.tableLayoutPanel4.Controls.Add(this.buttonSearchBreadthFirst, 0, 0);
             this.tableLayoutPanel4.Controls.Add(this.label2, 0, 4);
             this.tableLayoutPanel4.Controls.Add(this.comboBox2, 1, 4);
-            this.tableLayoutPanel4.Controls.Add(this.button4, 0, 3);
-            this.tableLayoutPanel4.Controls.Add(this.textBox2, 1, 3);
-            this.tableLayoutPanel4.Controls.Add(this.button5, 0, 1);
-            this.tableLayoutPanel4.Controls.Add(this.button7, 0, 2);
+            this.tableLayoutPanel4.Controls.Add(this.textBoxPuzzleInput2, 1, 3);
+            this.tableLayoutPanel4.Controls.Add(this.buttonSearchDepthFirst, 0, 1);
+            this.tableLayoutPanel4.Controls.Add(this.buttonSearchAStar, 0, 2);
+            this.tableLayoutPanel4.Controls.Add(this.buttonRandomizePuzzle2, 0, 3);
             this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
@@ -380,16 +385,17 @@
             this.tableLayoutPanel4.Size = new System.Drawing.Size(368, 402);
             this.tableLayoutPanel4.TabIndex = 2;
             // 
-            // button6
+            // buttonSearchBreadthFirst
             // 
-            this.button6.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.button6.AutoSize = true;
-            this.button6.Location = new System.Drawing.Point(52, 28);
-            this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(79, 23);
-            this.button6.TabIndex = 0;
-            this.button6.Text = "Breadth First";
-            this.button6.UseVisualStyleBackColor = true;
+            this.buttonSearchBreadthFirst.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.buttonSearchBreadthFirst.AutoSize = true;
+            this.buttonSearchBreadthFirst.Location = new System.Drawing.Point(52, 28);
+            this.buttonSearchBreadthFirst.Name = "buttonSearchBreadthFirst";
+            this.buttonSearchBreadthFirst.Size = new System.Drawing.Size(79, 23);
+            this.buttonSearchBreadthFirst.TabIndex = 0;
+            this.buttonSearchBreadthFirst.Text = "Breadth First";
+            this.buttonSearchBreadthFirst.UseVisualStyleBackColor = true;
+            this.buttonSearchBreadthFirst.Click += new System.EventHandler(this.buttonSearchBreadthFirst_Click);
             // 
             // label2
             // 
@@ -414,53 +420,64 @@
             this.comboBox2.Size = new System.Drawing.Size(121, 21);
             this.comboBox2.TabIndex = 6;
             this.comboBox2.Text = "3";
+            this.toolTip1.SetToolTip(this.comboBox2, "Select the size of the puzzle.");
             // 
-            // button4
+            // textBoxPuzzleInput2
             // 
-            this.button4.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.button4.Location = new System.Drawing.Point(54, 268);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(75, 23);
-            this.button4.TabIndex = 2;
-            this.button4.Text = "Use Input";
-            this.button4.UseVisualStyleBackColor = true;
-            this.button4.Click += new System.EventHandler(this.buttonUseInput_Click);
+            this.textBoxPuzzleInput2.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.textBoxPuzzleInput2.Location = new System.Drawing.Point(201, 270);
+            this.textBoxPuzzleInput2.Name = "textBoxPuzzleInput2";
+            this.textBoxPuzzleInput2.Size = new System.Drawing.Size(150, 20);
+            this.textBoxPuzzleInput2.TabIndex = 3;
+            this.textBoxPuzzleInput2.Text = "7,8,3,4,1,5,6,,2";
+            this.toolTip1.SetToolTip(this.textBoxPuzzleInput2, "Enter a puzzle line by line, each value separated by commas.");
+            this.textBoxPuzzleInput2.TextChanged += new System.EventHandler(this.textBoxPuzzleInput_TextChanged);
             // 
-            // textBox2
+            // buttonSearchDepthFirst
             // 
-            this.textBox2.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.textBox2.Location = new System.Drawing.Point(201, 270);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(150, 20);
-            this.textBox2.TabIndex = 3;
-            this.textBox2.Text = "7,8,3,4,1,5,6,,2";
+            this.buttonSearchDepthFirst.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.buttonSearchDepthFirst.Location = new System.Drawing.Point(54, 108);
+            this.buttonSearchDepthFirst.Name = "buttonSearchDepthFirst";
+            this.buttonSearchDepthFirst.Size = new System.Drawing.Size(75, 23);
+            this.buttonSearchDepthFirst.TabIndex = 1;
+            this.buttonSearchDepthFirst.Text = "Depth First";
+            this.buttonSearchDepthFirst.UseVisualStyleBackColor = true;
+            this.buttonSearchDepthFirst.Click += new System.EventHandler(this.buttonSearchDepthFirst_Click);
             // 
-            // button5
+            // buttonSearchAStar
             // 
-            this.button5.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.button5.Location = new System.Drawing.Point(54, 108);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(75, 23);
-            this.button5.TabIndex = 1;
-            this.button5.Text = "Depth First";
-            this.button5.UseVisualStyleBackColor = true;
+            this.buttonSearchAStar.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.buttonSearchAStar.Location = new System.Drawing.Point(54, 188);
+            this.buttonSearchAStar.Name = "buttonSearchAStar";
+            this.buttonSearchAStar.Size = new System.Drawing.Size(75, 23);
+            this.buttonSearchAStar.TabIndex = 7;
+            this.buttonSearchAStar.Text = "A*";
+            this.buttonSearchAStar.UseVisualStyleBackColor = true;
+            this.buttonSearchAStar.Click += new System.EventHandler(this.buttonSearchAStar_Click);
             // 
-            // button7
+            // toolTip1
             // 
-            this.button7.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.button7.Location = new System.Drawing.Point(54, 188);
-            this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(75, 23);
-            this.button7.TabIndex = 7;
-            this.button7.Text = "A*";
-            this.button7.UseVisualStyleBackColor = true;
+            this.toolTip1.AutoPopDelay = 5000;
+            this.toolTip1.InitialDelay = 500;
+            this.toolTip1.ReshowDelay = 100;
+            // 
+            // buttonRandomizePuzzle2
+            // 
+            this.buttonRandomizePuzzle2.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.buttonRandomizePuzzle2.AutoSize = true;
+            this.buttonRandomizePuzzle2.Location = new System.Drawing.Point(46, 268);
+            this.buttonRandomizePuzzle2.Name = "buttonRandomizePuzzle2";
+            this.buttonRandomizePuzzle2.Size = new System.Drawing.Size(91, 23);
+            this.buttonRandomizePuzzle2.TabIndex = 8;
+            this.buttonRandomizePuzzle2.Text = "Random Puzzle";
+            this.buttonRandomizePuzzle2.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(382, 434);
-            this.Controls.Add(this.tabPagePuzzle);
+            this.Controls.Add(this.tabControl1);
             this.Name = "Form1";
             this.Text = "Form1";
             this.tableLayoutPanel1.ResumeLayout(false);
@@ -468,7 +485,7 @@
             this.tableLayoutPanel2.PerformLayout();
             this.tableLayoutPanel3.ResumeLayout(false);
             this.tableLayoutPanel3.PerformLayout();
-            this.tabPagePuzzle.ResumeLayout(false);
+            this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
             this.tableLayoutPanel4.ResumeLayout(false);
@@ -492,22 +509,23 @@
 		private System.Windows.Forms.Label labelPos1;
 		private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
 		private System.Windows.Forms.Button button3;
-		private System.Windows.Forms.Button button2;
+		private System.Windows.Forms.Button buttonRandomizePuzzle;
 		private System.Windows.Forms.Button button1;
 		private System.Windows.Forms.TextBox textBoxPuzzleInput;
 		private System.Windows.Forms.Label label1;
 		private System.Windows.Forms.ComboBox comboBox1;
-        private System.Windows.Forms.TabControl tabPagePuzzle;
+        private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
-        private System.Windows.Forms.Button button6;
+        private System.Windows.Forms.Button buttonSearchBreadthFirst;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox comboBox2;
-        private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.TextBox textBox2;
-        private System.Windows.Forms.Button button5;
-        private System.Windows.Forms.Button button7;
+        private System.Windows.Forms.TextBox textBoxPuzzleInput2;
+        private System.Windows.Forms.Button buttonSearchDepthFirst;
+        private System.Windows.Forms.Button buttonSearchAStar;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button buttonRandomizePuzzle2;
     }
 }
 
