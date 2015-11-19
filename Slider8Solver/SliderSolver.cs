@@ -1,43 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace Slider8Solver
 {
-    public class SliderNode
-    {
-        public List<int> CurrentState;
-        public string CurrentStateString;
-        public string ParentState;
-        public int Depth;
-        public int Heuristic;
-
-        public SliderNode(List<int> state, List<int> parent, int d)
-        {
-            CurrentState = state;
-            CurrentStateString = StateToString(state);
-            ParentState = StateToString(parent);
-            Depth = d;
-        }
-
-        public SliderNode(List<int> state, List<int> parent, int d, int h)
-        {
-            CurrentState = state;
-            CurrentStateString = StateToString(state);
-            ParentState = StateToString(parent);
-            Depth = d;
-            Heuristic = h;
-        }
-
-        private static string StateToString(List<int> state)
-        {
-            return state.Aggregate("", (current, i) => current + i.ToString());
-        }
-    }
 
     public enum SearchType
     {
@@ -46,297 +13,280 @@ namespace Slider8Solver
         AStar
     }
 
+	/// <summary>
+	/// 
+	/// </summary>
+    public class SliderSolver
+    {
+		#region Public Members
+		public Puzzle CurrentPuzzle { get; }
 
-	public class SliderSolver
-	{
+		/// <summary>
+		/// Gets the result node of a completed search.
+		/// </summary>
+        public SliderNode Result { get; private set; }
+        
+		/// <summary>
+		/// Gets the time required to solve the puzzle.
+		/// </summary>
+        public double TimeSeconds => (_finishTime - _startTime).TotalMilliseconds/1000;
+        
+		/// <summary>
+		/// Total count of the nodes expanded by the last used search algorithm.
+		/// </summary>
+        public int NodesExpanded;
 
-	    public Puzzle CurrentPuzzle;
-
-		private readonly List<int> _currentState = new List<int>();
-		private List<int> _goalState;
-
-	    private Task<SliderNode> _solverTask;
-	    private DateTime _startTime;
-	    private DateTime _finishTime;
+		/// <summary>
+		/// The last search algorithm used to solve this puzzle.
+		/// </summary>
+	    public SearchType LastSearchType { get; private set; }
+		#endregion Public Members
 
 
-		private readonly Dictionary<string, SliderNode> _foundStates = new Dictionary<string, SliderNode>();
+		#region Private Members
+		/// <summary>
+		/// Tracks the start time of the solver.
+		/// </summary>
+		private DateTime _startTime;
 
-		private readonly Stack<List<int>> _stateStack = new Stack<List<int>>();
+		/// <summary>
+		/// Tracks the finish time of the solver.
+		/// </summary>
+        private DateTime _finishTime;
+        
+		/// <summary>
+		/// Stores all visited states on the current search path.
+		/// </summary>
+        private readonly SortedList<string, SliderNode> _history = new SortedList<string, SliderNode>();
+		#endregion Private Members
 
-        private readonly Queue<List<int>> _stateQueue = new Queue<List<int>>();
+
+		#region Ctors
+		/// <summary>
+		/// Initializes a new instance of the SliderSolver class that takes an instance of a puzzle to solve.
+		/// </summary>
+		/// <param name="puz">The puzzle instance that this solver will be used to solve.</param>
+		public SliderSolver(Puzzle puz)
+		{
+			CurrentPuzzle = puz;
+		}
+		#endregion Ctors
 
 
-        public SliderSolver(Puzzle newPuzzle)
+		#region Search Types
+		/// <summary>
+		/// Runs a Breadth First search through the puzzle, looking for the solution.
+		/// </summary>
+		/// <returns>Node holding the solved puzzle, or nothing if puzzle not solved.</returns>
+		private SliderNode BreadthFirstSolver()
         {
-            CurrentPuzzle = newPuzzle;
-            _currentState = CurrentPuzzle.StartingState;
-        }
-
-
-        #region Solvability
-            /// <summary>
-            /// Determines if a puzzle is solvable
-            /// </summary>
-            /// <returns>Returns true if puzzle can be solved</returns>
-	        public static bool IsSolvable(Puzzle puzzle)
-            {
-                // Go ahead and get all this stuff cause we use most of it more than once
-	            var isSizeOdd = IsOdd(puzzle.Size);
-                var numInversionsEven = !IsOdd(GetInversionCount(puzzle));
-                var blankOnOddRow = IsOdd(GetBlankRowFromBottom(puzzle));
-
-                // Checking for solvability involves checking for inversion count and puzzle size
-                // A puzzle is solvable if:
-                // Puzzle size is odd and number of inversions is even
-	            if ( (isSizeOdd && numInversionsEven) || (!isSizeOdd && (blankOnOddRow == numInversionsEven)) )
-	                return true;
-	            return false;
-	        }
-
-            /// <summary>
-            /// Counts the numver of inversions in a given puzzle state.
-            /// </summary>
-            /// <returns>Returns the number of inversions in a puzzle</returns>
-	        private static int GetInversionCount(Puzzle puzzle)
-            {
-                var state = puzzle.StartingState;
-	            var inversionCount = 0;
-	            var gridSize = puzzle.Size * puzzle.Size;
-
-	            for (int i = 0; i < gridSize - 1; i++)
-	                for (int j = i + 1; j < gridSize; j++)
-	                    if ((state[j] != 0) && (state[i] != 0) && state[i] > state[j])
-	                        inversionCount++;
-	            return inversionCount;
-	        }
-
-            /// <summary>
-            /// Determines if a number is odd or even
-            /// </summary>
-            /// <param name="num">Number to check</param>
-            /// <returns>Returns true if number is odd, false if number is even.</returns>
-            private static bool IsOdd(int num)
-	        {
-	            return num%2 != 0;
-	        }
-
-            /// <summary>
-            /// Finds the row number that the blank space resides on
-            /// </summary>
-            /// <returns></returns>
-            private static int GetBlankRowFromBottom(Puzzle puzzle)
-	        {
-	            var zeroIndex = puzzle.StartingState.IndexOf(0);
-
-                // The index of the empty position divided by the puzzle size and ceiling'd
-                // equals the row upon which the empty space resides.
-                var row = (int)Math.Ceiling((decimal)zeroIndex / puzzle.Size);
-                return puzzle.Size - row + 1;
-	        }
-        #endregion Solvability
-
-
-        private SliderNode DepthFirstSolver()
-	    {
-            var depth = 0;
-            var nodesExpanded = 0;
-            SliderNode node;
-            var stack = new Stack<SliderNode>();
-
-            // Initialize the first node for the default state
-            node = new SliderNode(_currentState, null, depth);
-
-            // The first found state is the starting state
-            _foundStates.Add(node.CurrentStateString, node);
-
-            // Push the first state into the stack
-            stack.Push(node);
-
-            while(stack.Count > 0)
-	        {
-	            // get first in stack
-	            var currentNode = stack.Pop();
-
-                // Go ahead and increase the depth here, we'll be making new nodes shortly if necessary
-                depth++;
-
-                // Is state the goal state?
-                if (currentNode.CurrentStateString.Equals(StateToString(_goalState)))
-                {
-                    // If yes return the state
-                    return currentNode;
-                    // Get path to root
-                }
-
-                // Otherwise get all swaps and push them to the queue
-                // get swaps and perform them for next states, add to queue
-                foreach (var swap in GetValidSwapIndices(currentNode.CurrentState))
-                {
-                    // Increment for each node expanded
-                    nodesExpanded++;
-                    var swapNode = new SliderNode(Swap(currentNode.CurrentState, swap), currentNode.CurrentState, depth);
-                    if (_foundStates.ContainsKey(swapNode.CurrentStateString)) continue;
-                    stack.Push(swapNode);
-                    _foundStates.Add(swapNode.CurrentStateString, swapNode);
-                }
-
-            }
-
-
-            return null;
-        }
-
-        private SliderNode BreadthFirstSolver()
-        {
-            var depth = 0;
-            var nodesExpanded = 0;
-            SliderNode node;
+            // Initialize the first node for the default state, add it to found state list,
+            // then push it to the queue
+            var node = CurrentPuzzle.StartingNode;
             var queue = new Queue<SliderNode>();
 
+            _history.Add(node.StateS, node);
 
-            // Initialize the first node for the default state
-            node = new SliderNode(_currentState, null, depth);
-
-            // The first found state is the starting state
-            _foundStates.Add(node.CurrentStateString, node);
-
-            // The first state on the queue is the starting state
             queue.Enqueue(node);
 
-
-            // Start processing the queue
-            while(queue.Count > 0)
+            while (queue.Count > 0)
             {
                 // get first in queue
                 var currentNode = queue.Dequeue();
 
-                // Go ahead and increase the depth here, we'll be making new nodes shortly if necessary
-                depth++;
+                // Increment for each node expanded
+                NodesExpanded++;
 
                 // Is state the goal state?
-                if (currentNode.CurrentStateString.Equals(StateToString(_goalState)))
-                {
-                    // If yes return the state
-                    return currentNode;
-                    // Get path to root
-                }
+                if (currentNode.StateS.Equals(CurrentPuzzle.GoalNode.StateS)) return currentNode;
 
-                // Otherwise get all swaps and push them to the queue
-                // get swaps and perform them for next states, add to queue
-                foreach (var swap in GetValidSwapIndices(currentNode.CurrentState))
+                // Get all swaps and push them to the queue
+                foreach (var swapNode in currentNode.GetSuccessors())
                 {
-                    // Increment for each node expanded
-                    nodesExpanded++;
-                    var swapNode = new SliderNode(Swap(currentNode.CurrentState, swap), currentNode.CurrentState, depth);
-                    if (_foundStates.ContainsKey(swapNode.CurrentStateString)) continue;
+                    // If the swapped state is already processed, continue
+                    if (_history.ContainsKey(swapNode.StateS)) continue;
+                    _history.Add(swapNode.StateS, swapNode);
+
                     queue.Enqueue(swapNode);
-                    _foundStates.Add(swapNode.CurrentStateString, swapNode);
                 }
             }
 
-
             return null;
         }
 
-        private SliderNode AStarSolver()
-	    {
+		/// <summary>
+		/// Runs a Depth First search through the puzzle, looking for the solution.
+		/// </summary>
+		/// <returns>Node holding the solved puzzle, or nothing if puzzle not solved.</returns>
+		private SliderNode DepthFirstSolver()
+        {
+            // Initialize the first node for the default state, add it to found state list,
+            // then push it to the stack
+            var node = CurrentPuzzle.StartingNode;
+            var stack = new Stack<SliderNode>();
+            
+            _history.Add(node.StateS, node);
 
-            return null;
-        }
+            stack.Push(node);
 
+            while (stack.Count > 0)
+            {
+                // get first in stack
+                var currentNode = stack.Pop();
 
-        #region PuzzleSolver
-            public void SolvePuzzle(SearchType type)
-		    {
-                CreateGoalState();
+                // Increment for each node expanded
+                NodesExpanded++;
 
-                switch (type)
+                // Is state the goal state?
+                if (currentNode.StateS.Equals(CurrentPuzzle.GoalNode.StateS)) return currentNode;
+
+                // Get all swaps and push them to the queue
+                foreach (var swapNode in currentNode.GetSuccessors())
                 {
-                    case SearchType.DepthFirst:
-                        _solverTask = new Task<SliderNode>(DepthFirstSolver);
-                        break;
-                    case SearchType.BreadthFirst:
-                        _solverTask = new Task<SliderNode>(BreadthFirstSolver);
-                        break;
-                    case SearchType.AStar:
-                        _solverTask = new Task<SliderNode>(AStarSolver);
-                        break;
+                    if (_history.ContainsKey(swapNode.StateS)) continue;
+                    _history.Add(swapNode.StateS, swapNode);
+
+                    stack.Push(swapNode);
                 }
+            }
 
-                _solverTask.Start();
-			    _solverTask.ContinueWith(SolverComplete);
-                _startTime = DateTime.Now;
-		    }
+            return null;
+        }
 
-		    private void SolverComplete(Task t)
-		    {
-		        if (!t.IsCompleted) return;
+		/// <summary>
+		/// Runs an AStar search through the puzzle, looking for the solution.
+		/// </summary>
+		/// <returns>Node holding the solved puzzle, or nothing if puzzle not solved.</returns>
+		private SliderNode AStarSolver()
+        {
+            // Initialize the first node for the default state, add it to found state list,
+            // then push it to the stack
+            var node = CurrentPuzzle.StartingNode;
 
-		        // Do completed action
-		        _finishTime = DateTime.Now;
-		        Console.WriteLine("Solver Completed");
-		    }
+            var comp = new ClassComparer();
+            var heuristicList = new SortedList<int, SliderNode>(comp);
+            
+            _history.Add(node.StateS, node);
+            heuristicList.Add(node.Heuristic + node.Cost, node);
 
-		    private void CreateGoalState()
-		    {
-			    _goalState = new List<int>();
-			    _goalState.AddRange(Enumerable.Range(1, CurrentPuzzle.Size));
-			    _goalState.Add(0);
-		    }
-		#endregion PuzzleSolver
+            while (heuristicList.Count > 0)
+            {
+                // get first in stack
+                var currentNode = heuristicList.First().Value;
+                heuristicList.RemoveAt(0);
 
+                // Increment for each node expanded
+                NodesExpanded++;
 
-		private static string StateToString(List<int> state)
+                // Is state the goal state?
+                if (currentNode.StateS.Equals(CurrentPuzzle.GoalNode.StateS)) return currentNode;
+
+                // Get all swaps and push them to the queue
+                foreach (var swapNode in currentNode.GetSuccessors())
+                {
+                    var key = swapNode.StateS;
+
+                    // If key is in history and the cost in the history is larger, then reduce the cost in the history
+                    // 
+                    if (_history.ContainsKey(key))
+                    {
+                        if (_history[key].Cost <= swapNode.Cost) continue;
+                        _history[key].Cost = swapNode.Cost;
+                        heuristicList.Add(swapNode.Heuristic + swapNode.Cost, swapNode);
+                    }
+                    else
+                    {
+                        heuristicList.Add(swapNode.Heuristic + swapNode.Cost, swapNode);
+                        _history.Add(swapNode.StateS, swapNode);
+                    }
+                }
+            }
+            return null;
+        }
+		#endregion Search Types
+
+		
+		/// <summary>
+		/// Runs a SearchType search with the solver.
+		/// </summary>
+		/// <param name="searchType">The SearchType search to perform with the solver.</param>
+		public void SolvePuzzle(SearchType searchType)
+        {
+            _startTime = DateTime.Now;
+	        LastSearchType = searchType;
+
+            switch (searchType)
+            {
+                case SearchType.DepthFirst:
+                    Result = DepthFirstSolver();
+                    break;
+
+                case SearchType.BreadthFirst:
+                    Result = BreadthFirstSolver();
+                    break;
+
+                case SearchType.AStar:
+                    Result = AStarSolver();
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(searchType), searchType, null);
+            }
+            _finishTime = DateTime.Now;
+        }
+
+		/// <summary>
+		/// Creates a list of nodes leading from the starting state to the result state.
+		/// </summary>
+		/// <returns>Returns a List&lt;SliderNode&gt; of nodes in order from starting state to result state.</returns>
+		public List<SliderNode> GetAnswerPath()
 		{
-			return state.Aggregate("", (current, i) => current + i.ToString());
+			var answerList = new List<SliderNode>();
+
+			var currentNode = Result;
+			answerList.Add(Result);
+
+			// So long as the nodes have parents, add them to the list.
+			// This creates a reverse order list, so we have to reverse 
+			// it to return it in the correct order.
+			while (!string.IsNullOrEmpty(currentNode.ParentS))
+			{
+				currentNode = _history[currentNode.ParentS];
+				answerList.Add(currentNode);
+			}
+			answerList.Reverse();
+			return answerList;
 		}
 
-
-		private IEnumerable<int> GetValidSwapIndices(IList<int> state)
+		/// <summary>
+		/// Creates a list of plaintext move directions for solving a puzzle.
+		/// </summary>
+		/// <returns>Returns a List&lt;string&gt; of directions for moves to solve the puzzle.</returns>
+		public List<string> GetAnswerMoves()
 		{
-			var emptyIndex = state.IndexOf(0);
-			var validIndices = new List<int>();
+			var moves = new List<string>();
+			var answerPath = GetAnswerPath();
 
-            // If modulus of index is 0 or CurrentPuzzle.Size-1 then it is an edge
-            // If 0 it is leading edge, can only swap with index + 1
-            // If CurrentPuzzle.Size-1  it is a trailing edge, can only swap with index - 1
-
-            // Edge check
-            var position = emptyIndex % CurrentPuzzle.Size;
-
-			// Leading edge
-			if (position.Equals(0))
-				validIndices.Add(emptyIndex + 1);
-
-			// Trailing edge
-			else if (position.Equals(CurrentPuzzle.Size - 1))
-				validIndices.Add(emptyIndex - 1);
-
-			// Middle position
-			else
+			// To find the direction that a tile was moved we need to look at where the empty square gets moved to.
+			// Then look at the position it was and get the number there to return the tile moved.
+			for (var index = 0; index < answerPath.Count - 1; index++)
 			{
-				validIndices.Add(emptyIndex + 1);
-				validIndices.Add(emptyIndex - 1);
+				var posEmpty = answerPath[index].GetCellPositionOfValue(0);
+				var posEmptySuc = answerPath[index + 1].GetCellPositionOfValue(0);
+
+				if (posEmptySuc.X < posEmpty.X)
+					moves.Add("Move " + answerPath[index].GetValueOfCellPosition(posEmptySuc) + " right");
+				else if (posEmptySuc.X > posEmpty.X)
+					moves.Add("Move " + answerPath[index].GetValueOfCellPosition(posEmptySuc) + " left");
+				else if (posEmptySuc.Y < posEmpty.Y)
+					moves.Add("Move " + answerPath[index].GetValueOfCellPosition(posEmptySuc) + " down");
+				else if (posEmptySuc.Y > posEmpty.Y)
+					moves.Add("Move " + answerPath[index].GetValueOfCellPosition(posEmptySuc) + " up");
+
 			}
 
-			// Add indices above and below the empty space, if valid
-			if (!(emptyIndex - CurrentPuzzle.Size <= 0)) validIndices.Add(emptyIndex - CurrentPuzzle.Size);
-			if (_currentState.Count >= emptyIndex + CurrentPuzzle.Size) validIndices.Add(emptyIndex + CurrentPuzzle.Size);
 
-			//783415602;
-
-			validIndices.Sort();
-			return validIndices;
-		}
-
-
-		private static List<int> Swap(List<int> state, int index)
-		{
-			var temp = state[index];
-			state[state.IndexOf(0)] = temp;
-			state[index] = 0;
-			return state;
+			return moves;
 		}
 	}
 }
