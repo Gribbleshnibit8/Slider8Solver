@@ -58,6 +58,8 @@ namespace Slider8Solver
 
         private void textBoxPuzzleInput_KeyPress(object sender, KeyPressEventArgs e)
         {
+			// For all values that are not comma, number, or controls, mark the event
+			// as handled to prevent the data from being entered.
             e.Handled = true;
             if (e.KeyChar.Equals(',') || char.IsNumber(e.KeyChar) || char.IsControl(e.KeyChar))
                 e.Handled = false;
@@ -90,6 +92,11 @@ namespace Slider8Solver
         #endregion ToolTip Controller
 
 
+		/// <summary>
+		/// Starts a given search type.
+		/// </summary>
+		/// <param name="lbl">The label output will be written to.</param>
+		/// <param name="type">The search type to perform.</param>
         private void StartSearch(Label lbl, SearchType type)
         {
             var puzzle = CreatePuzzleFromInput();
@@ -106,6 +113,10 @@ namespace Slider8Solver
 				OutputPuzzleSteps(solver);
         }
         
+		/// <summary>
+		/// Creates a new puzzle from the given input and size. If the input is not valid, returns nothing and marks the entry box red to notify error.
+		/// </summary>
+		/// <returns></returns>
         private Puzzle CreatePuzzleFromInput()
         {
             int size;
@@ -114,11 +125,17 @@ namespace Slider8Solver
             var tmpPuz = Puzzle.TryCreatePuzzle(textBoxPuzzleInput2.Text, size);
             if (tmpPuz != null) return tmpPuz;
 
+			// Handle an invalid puzzle by marking the text box in red and showing a tooltip to let the user know.
             UpdateTextBoxColors(true);
             TimedToolTip(1500, "The current input is not valid.");
             return null;
         }
 
+		/// <summary>
+		/// Updates a given label control text with either an error message or the results from a given solver.
+		/// </summary>
+		/// <param name="slvr"></param>
+		/// <param name="lbl"></param>
         private void UpdateLabelWithPuzzleResults(SliderSolver slvr, Label lbl)
         {
             if (slvr.Result == null)
@@ -134,21 +151,28 @@ namespace Slider8Solver
                 + "\nTime: " + $"{slvr.TimeSeconds:n4}";
         }
 
+		/// <summary>
+		/// Retrieves a step-by-step solution from the solver for solving a puzzle.
+		/// </summary>
+		/// <param name="slvr"></param>
         private void OutputPuzzleSteps(SliderSolver slvr)
         {
-            //foreach (var node in slvr.GetAnswerPath())
-            //    richTextBoxOutput.AppendText(node + Environment.NewLine);
-			
 	        foreach (var move in slvr.GetAnswerMoves())
 				richTextBoxOutput.AppendText(move + Environment.NewLine);
-
         }
 
+		/// <summary>
+		/// Swaps text box background colors.
+		/// </summary>
+		/// <param name="turnRed"></param>
         private void UpdateTextBoxColors(bool turnRed = false)
         {
             textBoxPuzzleInput2.BackColor = turnRed ? Color.Red : Color.White;
         }
 
+		/// <summary>
+		/// Redraws the TableLayoutPanel control for a new puzzle size. SLOW!
+		/// </summary>
         private void UpdatePuzzleBoxSize()
         {
             int size;
@@ -165,11 +189,11 @@ namespace Slider8Solver
             tableLayoutPanelPuzzle.ColumnCount = size;
             tableLayoutPanelPuzzle.RowCount = size;
 
-            for (int col = 0; col < size; col++)
+            for (var col = 0; col < size; col++)
             {
                 tableLayoutPanelPuzzle.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, percent));
 
-                for (int row = 0; row < size; row++)
+                for (var row = 0; row < size; row++)
                 {
                     if (col == 0)
                         tableLayoutPanelPuzzle.RowStyles.Add(new RowStyle(SizeType.Percent, percent));
@@ -189,17 +213,23 @@ namespace Slider8Solver
             UpdatePuzzleWithContents();
         }
 
+		/// <summary>
+		/// Converts the contents of the text box into the contents of the TableLayoutPanel
+		/// </summary>
         private void UpdatePuzzleWithContents()
         {
             int size;
             int.TryParse(comboBoxPuzzleSize.Text, out size);
             var contents = textBoxPuzzleInput2.Text.Split(',').ToList();
             
-
+			// TableLayoutPanel is weird, it holds everything in an IEnumberable as a single list,
+			// but each control in that list has an x,y value that determines its row and column.
+			// It's annoying to work with but this is the best way I could figure to do it.
             int counter = 0;
             for (int row = 0; row < size; row++)
                 for (int col = 0; col < size; col++)
                 {
+					if (counter >= contents.Count) return;
                     var num = contents[counter];
                     if (num.Equals("0") || string.IsNullOrEmpty(num)) num = "";
                     tableLayoutPanelPuzzle.GetControlFromPosition(col,row).Text = num;
